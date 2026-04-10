@@ -1,0 +1,1 @@
+const res=document.getElementById('res');function run(){res.innerText='Components: '+(code.value.match(/---/g)||[]).length;}

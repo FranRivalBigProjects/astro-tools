@@ -1,0 +1,1 @@
+const res=document.getElementById('res');function run(){res.innerText='Islands: '+(code.value.match(/client:/g)||[]).length;}

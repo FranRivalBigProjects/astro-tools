@@ -1,0 +1,1 @@
+const res=document.getElementById('res');function run(){res.innerText='Partial components: '+(code.value.match(/client:visible|client:idle/g)||[]).length;}
