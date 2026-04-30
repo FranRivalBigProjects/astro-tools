@@ -1,158 +1,991 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-site-verification" content="PkLa_ViOo6FAHpvh8SacceMb95o9tePRdrqLNBz9X1M" />
+<meta name="robots" content="index, follow">
 
-    <title>Astro Tools | Islands, Hydration, Rendering & Performance Optimization</title>
+<title>Astro Partial Hydration – Islands Architecture &amp; client:* Directives Guide</title>
 
-    <meta name="description" content="Astro tools to analyze islands architecture, hydration, rendering, build optimization, and performance in modern web apps.">
+<meta name="description" content="Complete guide to Astro partial hydration. How Astro Islands work, all client:* directives explained (client:load, client:idle, client:visible, client:media, client:only), interactive visualizer, and performance impact. Free reference.">
 
-    <meta name="keywords" content="
-        astro tools,
-        astro islands architecture tools,
-        astro hydration debugger,
-        astro rendering analyzer,
-        astro performance tools,
-        astro build optimization tool,
-        astro partial hydration analyzer,
-        astro island architecture visualization,
-        astro frontend performance tools,
-        astro dev tools online,
-        astro rendering modes tool,
-        astro component isolation tools,
-        astro optimization tools,
-        astro debugging tools,
-        astro static site performance tools,
-        astro web performance analyzer,
-        astro ssr vs static tool,
-        astro island hydration tool,
-        astro build analyzer,
-        astro developer tools
-    ">
+<meta name="keywords" content="astro partial hydration, astro islands architecture, astro client directives, astro client:load, astro client:visible, astro client:idle, astro hydration, astro islands explained, astro zero js by default, astro hydration directives">
 
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://yourdomain.com/astro-tools/">
+<link rel="canonical" href="https://franrivalbigprojects.github.io/astro-tools/">
 
-    <!-- Google verification -->
-    <meta name="google-site-verification" content="PkLa_ViOo6FAHpvh8SacceMb95o9tePRdrqLNBz9X1M" />
+<meta property="og:title" content="Astro Partial Hydration – Islands Architecture and client:* Directives Guide">
+<meta property="og:description" content="How Astro partial hydration works, all client:* directives explained, interactive visualizer, and performance impact. Free reference.">
+<meta property="og:type" content="website">
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Astro Tools">
-    <meta property="og:description" content="Analyze Astro islands, hydration, rendering, and optimize frontend performance.">
-    <meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #020617;
-            color: #e2e8f0;
-        }
-        header {
-            padding: 50px 20px;
-            text-align: center;
-            background: #000;
-        }
-        h1 {
-            margin: 0;
-            font-size: 2.5em;
-        }
-        p {
-            max-width: 900px;
-            margin: 20px auto;
-            line-height: 1.7;
-        }
-        .container {
-            max-width: 1100px;
-            margin: auto;
-            padding: 20px;
-        }
-        .tool {
-            background: #020617;
-            padding: 18px;
-            margin: 10px 0;
-            border-radius: 10px;
-            transition: 0.2s;
-        }
-        .tool:hover {
-            background: #1e293b;
-        }
-        a {
-            color: #38bdf8;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        footer {
-            text-align: center;
-            padding: 30px;
-            font-size: 0.9em;
-            opacity: 0.7;
-        }
-    </style>
+<style>
+:root {
+  --bg: #050410;
+  --surface: #07061a;
+  --surface2: #0c0b24;
+  --border: #12102e;
+  --border2: #181640;
+  --astro: #bc52f0;
+  --astro-dim: rgba(188,82,240,0.12);
+  --astro-dim2: rgba(188,82,240,0.05);
+  --astro-glow: rgba(188,82,240,0.18);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.1);
+  --green-dim2: rgba(34,197,94,0.05);
+  --blue: #38bdf8;
+  --blue-dim: rgba(56,189,248,0.08);
+  --orange: #fb923c;
+  --orange-dim: rgba(251,146,60,0.08);
+  --yellow: #fbbf24;
+  --yellow-dim: rgba(251,191,36,0.08);
+  --red: #f87171;
+  --text: #c0b8e8;
+  --text-muted: #3a3570;
+  --text-dim: #0f0e30;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+  --r: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+header {
+  border-bottom: 1px solid var(--border2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(5,4,16,0.97);
+  backdrop-filter: blur(12px);
+}
+
+.header-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.logo-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--astro);
+  background: var(--astro-dim2);
+  border: 1px solid rgba(188,82,240,0.3);
+  border-radius: 3px;
+  padding: 3px 9px;
+}
+
+.logo-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.logo-text strong { color: var(--astro); font-weight: 500; }
+
+.wrapper {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* HERO */
+.hero {
+  padding: 50px 0 36px;
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: 30px;
+}
+
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--astro);
+  margin-bottom: 14px;
+  opacity: 0.8;
+}
+
+h1 {
+  font-size: clamp(22px, 3.2vw, 30px);
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+}
+
+h1 em { font-style: normal; color: var(--astro); }
+
+.hero-sub {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 620px;
+  line-height: 1.75;
+  margin-bottom: 20px;
+}
+
+.hero-sub strong { color: var(--text); }
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+
+.pill-a  { color: var(--astro); background: var(--astro-dim2); border-color: rgba(188,82,240,0.3); }
+.pill-dim { color: var(--text-muted); border-color: var(--border2); }
+
+/* CLIENT DIRECTIVES VISUALIZER */
+.vis-shell {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 0 40px rgba(188,82,240,0.04);
+}
+
+.vis-topbar {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border2);
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.topbar-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.directive-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg);
+}
+
+.dir-btn {
+  padding: 7px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+
+.dir-btn:hover { border-color: var(--astro); color: var(--text); }
+.dir-btn.active { border-color: var(--astro); background: var(--astro-dim2); color: var(--astro); }
+
+.vis-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 280px;
+}
+
+.vis-left {
+  border-right: 1px solid var(--border2);
+  padding: 18px;
+}
+
+.vis-right { padding: 18px; }
+
+.vis-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  margin-bottom: 12px;
+}
+
+.vc-dir { color: var(--astro); font-weight: 600; }
+.vc-tag { color: var(--blue); }
+.vc-attr { color: var(--yellow); }
+.vc-str { color: var(--green); }
+.vc-cm  { color: var(--text-dim); }
+
+.vis-meta-head {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.meta-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.meta-key { color: var(--text-muted); flex-shrink: 0; }
+.meta-val { color: var(--astro); }
+
+.timeline {
+  margin-top: 14px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 12px 14px;
+}
+
+.tl-head {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 8px;
+}
+
+.tl-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.tl-label { width: 56px; flex-shrink: 0; color: var(--text-muted); }
+
+.tl-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border2);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.tl-fill {
+  height: 100%;
+  border-radius: 3px;
+  position: absolute;
+  top: 0;
+}
+
+.tl-val { width: 64px; text-align: right; flex-shrink: 0; }
+
+/* SECTION */
+hr.divider { border: none; border-top: 1px solid var(--border2); margin: 50px 0; }
+.content-section { margin-bottom: 50px; }
+
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.sec-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--astro);
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.sec-rule { flex: 1; height: 1px; background: var(--border2); }
+
+p { font-size: 14px; color: var(--text-muted); line-height: 1.8; margin-bottom: 10px; max-width: 820px; }
+p strong { color: var(--text); }
+
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface2);
+  color: var(--astro);
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+}
+
+.code-block {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--astro);
+  border-radius: 5px;
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 12px 0;
+  color: var(--text-muted);
+}
+
+.ck  { color: var(--astro); }
+.ct  { color: var(--blue); }
+.cs  { color: var(--green); }
+.cm  { color: var(--text-dim); }
+
+/* DIRECTIVES TABLE */
+.dir-table {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.dt-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 180px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.dt-row:last-child { border-bottom: none; }
+.dt-row.dt-head { background: var(--surface2); }
+.dt-row:hover:not(.dt-head) { background: rgba(188,82,240,0.02); }
+
+.dt-cell {
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border2);
+}
+
+.dt-cell:last-child { border-right: none; }
+.dt-head .dt-cell { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+.dt-dir { color: var(--astro); font-weight: 600; }
+
+.when-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+
+.wb-immediate { color: var(--red);    background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.2); }
+.wb-idle      { color: var(--yellow); background: var(--yellow-dim);      border-color: rgba(251,191,36,0.2); }
+.wb-visible   { color: var(--green);  background: var(--green-dim2);      border-color: rgba(34,197,94,0.2); }
+.wb-media     { color: var(--blue);   background: var(--blue-dim);        border-color: rgba(56,189,248,0.2); }
+.wb-csronly   { color: var(--astro);  background: var(--astro-dim2);      border-color: rgba(188,82,240,0.2); }
+
+.dense-block {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 22px;
+  margin-top: 14px;
+}
+
+.dense-block p { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border2); max-width: none; }
+.dense-block p:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+.faq-list {
+  margin-top: 14px;
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.faq-item { border-bottom: 1px solid var(--border2); }
+.faq-item:last-child { border-bottom: none; }
+
+.faq-q {
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: none;
+  padding: 13px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: var(--sans);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.15s;
+}
+
+.faq-q:hover { background: var(--astro-dim2); }
+.faq-arrow { font-family: var(--mono); font-size: 11px; color: var(--text-dim); transition: transform 0.2s; flex-shrink: 0; }
+.faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+.faq-a {
+  display: none;
+  padding: 0 18px 13px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.75;
+  border-top: 1px solid var(--border2);
+  background: var(--bg);
+}
+
+.faq-item.open .faq-a { display: block; }
+.faq-a code { color: var(--astro); background: var(--astro-dim2); }
+
+.subtools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.stl {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  text-decoration: none;
+  display: block;
+  transition: border-color 0.15s;
+}
+
+.stl:hover { border-color: rgba(188,82,240,0.3); }
+.stl-eye  { font-family: var(--mono); font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.stl-name { font-family: var(--mono); font-size: 12px; color: var(--astro); font-weight: 500; }
+
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 50px; }
+
+.tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  padding: 4px 12px;
+  cursor: default;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tag:hover { color: var(--astro); border-color: rgba(188,82,240,0.3); }
+
+footer { border-top: 1px solid var(--border2); padding: 20px 0; position: relative; z-index: 1; }
+
+.footer-inner {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+footer p { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin: 0; }
+
+@media (max-width: 640px) {
+  .vis-body { grid-template-columns: 1fr; }
+  .vis-left { border-right: none; border-bottom: 1px solid var(--border2); }
+  .dt-row   { grid-template-columns: 130px 1fr; font-size: 10px; }
+  .dt-row .dt-cell:last-child { display: none; }
+}
+</style>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Astro Partial Hydration – Islands Architecture and client:* Directives","description":"Complete guide to Astro partial hydration. How Islands architecture works, all client:* directives explained (client:load, client:idle, client:visible, client:media, client:only), interactive visualizer, and performance impact.","keywords":"astro partial hydration, astro islands architecture, astro client directives, astro client:load, astro client:visible, astro hydration"}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is Astro partial hydration?","acceptedAnswer":{"@type":"Answer","text":"Astro partial hydration is a technique where only specific interactive components (Islands) are hydrated with JavaScript, while the rest of the page is static HTML. Unlike traditional SPAs that ship JavaScript for the entire page, Astro renders components to HTML at build time and only sends JS for components that actually need interactivity. This is controlled via client:* directives: client:load (hydrate immediately), client:idle (hydrate when browser is idle), client:visible (hydrate when scrolled into view), client:media (hydrate at a CSS breakpoint), client:only (CSR only, no SSR)."}},{"@type":"Question","name":"What is the difference between client:load and client:visible in Astro?","acceptedAnswer":{"@type":"Answer","text":"client:load hydrates the component immediately on page load — the JavaScript is fetched and executed right away. Use it for components that are visible above-the-fold and need immediate interactivity. client:visible defers hydration until the component scrolls into the browser viewport. Use it for below-the-fold components — this reduces initial JavaScript, improves LCP, and defers work until the user actually needs it. client:visible uses IntersectionObserver internally."}}]}
+</script>
+
 </head>
 
 <body>
-
 <header>
-    <h1>Astro Tools</h1>
-    <p>
-        Analyze, debug, and optimize Astro applications with tools for islands architecture, hydration, 
-        rendering modes, build process, and performance.
-    </p>
+  <div class="header-inner">
+    <span class="logo-pill">Astro</span>
+    <span class="logo-text"><strong>partial</strong>-hydration &middot; islands</span>
+  </div>
 </header>
 
-<div class="container">
+<div class="wrapper">
 
-    <h2>Astro Developer Tools</h2>
-
-    <div class="tool"><a href="/astro-tools/build/">build</a> — Analyze build output and optimization.</div>
-    <div class="tool"><a href="/astro-tools/hydration/">hydration</a> — Debug hydration behavior and timing.</div>
-    <div class="tool"><a href="/astro-tools/islands/">islands</a> — Visualize Astro islands architecture.</div>
-    <div class="tool"><a href="/astro-tools/isolation/">isolation</a> — Analyze component isolation and boundaries.</div>
-    <div class="tool"><a href="/astro-tools/partial/">partial</a> — Explore partial hydration strategies.</div>
-    <div class="tool"><a href="/astro-tools/performance/">performance</a> — Measure frontend performance and load speed.</div>
-    <div class="tool"><a href="/astro-tools/rendering/">rendering</a> — Compare rendering modes (SSR, static, hybrid).</div>
-
-    <h2>Why Astro Optimization Matters</h2>
-
-    <p>
-        Astro focuses on performance-first architecture using islands and partial hydration. 
-        Understanding these concepts is key to building fast and scalable web applications.
+  <section class="hero">
+    <p class="hero-eyebrow">// Astro Islands Architecture</p>
+    <h1>Astro <em>Partial Hydration</em> —<br>Islands &amp; client:* Directives Guide</h1>
+    <p class="hero-sub">
+      How Astro's partial hydration works, all <strong>client:* directives</strong> explained with interactive examples, and the performance impact of Islands architecture.
     </p>
+    <div class="pill-row">
+      <span class="pill pill-a">client:load</span>
+      <span class="pill pill-a">client:idle</span>
+      <span class="pill pill-a">client:visible</span>
+      <span class="pill pill-dim">client:media</span>
+      <span class="pill pill-dim">client:only</span>
+    </div>
+  </section>
 
-    <p>
-        ✔ Optimize hydration and rendering strategies<br>
-        ✔ Analyze build output and performance<br>
-        ✔ Visualize islands architecture<br>
-        ✔ Improve frontend load speed<br>
-        ✔ Build efficient static and hybrid sites
-    </p>
+  <!-- CLIENT DIRECTIVES VISUALIZER -->
 
-    <h2>Use Cases</h2>
+  <div class="vis-shell">
+    <div class="vis-topbar">
+      <span class="topbar-label">// client:* Directive Visualizer</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Select a directive to see when and how it hydrates</span>
+    </div>
+    <div class="directive-tabs" id="dirTabs"></div>
+    <div class="vis-body">
+      <div class="vis-left">
+        <div class="vis-meta-head">Code example</div>
+        <div class="vis-code" id="visCode"></div>
+      </div>
+      <div class="vis-right">
+        <div class="vis-meta-head">Directive details</div>
+        <div id="visMeta"></div>
+        <div class="timeline" id="visTL"></div>
+      </div>
+    </div>
+  </div>
 
-    <p>
-        Ideal for:
-        <br><br>
-        • Frontend developers<br>
-        • Astro users and learners<br>
-        • Performance-focused teams<br>
-        • Static site builders<br>
-        • Modern web development projects
-    </p>
+  <hr class="divider">
 
-    <h3>Related Tools</h3>
-    <p>
-        <a href="/angular-tools/">Angular Tools</a><br>
-        <a href="/alpinejs-tools-v2/">Alpine.js Tools</a><br>
-        <a href="/ai_ux_tools/">AI UX Tools</a>
-    </p>
+  <!-- ALL DIRECTIVES TABLE -->
+
+  <section class="content-section">
+    <div class="sec-head">
+      <span class="sec-label">All client:* directives</span>
+      <span class="sec-rule"></span>
+    </div>
+    <div class="dir-table">
+      <div class="dt-row dt-head">
+        <div class="dt-cell">Directive</div>
+        <div class="dt-cell">When it hydrates</div>
+        <div class="dt-cell">Best for</div>
+      </div>
+      <div class="dt-row">
+        <div class="dt-cell dt-dir">client:load</div>
+        <div class="dt-cell">Immediately on page load. JS fetched and executed right away. <span class="when-badge wb-immediate">Immediate</span></div>
+        <div class="dt-cell">Above-fold interactive components. Navigation, header, primary CTAs.</div>
+      </div>
+      <div class="dt-row">
+        <div class="dt-cell dt-dir">client:idle</div>
+        <div class="dt-cell">When browser is idle (requestIdleCallback). Deferred until main thread is free. <span class="when-badge wb-idle">After load</span></div>
+        <div class="dt-cell">Secondary UI like tooltips, help widgets, non-critical animations.</div>
+      </div>
+      <div class="dt-row">
+        <div class="dt-cell dt-dir">client:visible</div>
+        <div class="dt-cell">When component scrolls into viewport (IntersectionObserver). <span class="when-badge wb-visible">On scroll</span></div>
+        <div class="dt-cell">Below-fold components. Carousels, comment sections, footer widgets.</div>
+      </div>
+      <div class="dt-row">
+        <div class="dt-cell dt-dir">client:media</div>
+        <div class="dt-cell">When a CSS media query matches. <code>client:media="(max-width: 768px)"</code> <span class="when-badge wb-media">On breakpoint</span></div>
+        <div class="dt-cell">Mobile-only or desktop-only interactive components. Responsive navigation.</div>
+      </div>
+      <div class="dt-row">
+        <div class="dt-cell dt-dir">client:only</div>
+        <div class="dt-cell">Only renders client-side. No SSR HTML output. Must specify framework. <span class="when-badge wb-csronly">CSR only</span></div>
+        <div class="dt-cell">Components that can't render server-side (window-dependent, third-party widgets).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPLANATION -->
+
+  <section class="content-section">
+    <div class="sec-head">
+      <span class="sec-label">How Astro partial hydration works</span>
+      <span class="sec-rule"></span>
+    </div>
+    <p><strong>Partial hydration</strong> means only specific components get JavaScript — the rest of the page is zero-JS static HTML. Astro calls these interactive components <strong>Islands</strong>. Every non-Island component ships as plain HTML with no client-side overhead.</p>
+
+
+<div class="code-block"><span class="cm">---</span>
+
+
+<span class="cm">// src/pages/index.astro</span>
+<span class="ck">import</span> Header <span class="ck">from</span> <span class="cs">’./Header.astro’</span>        <span class="cm">// Zero JS — static HTML</span>
+<span class="ck">import</span> HeroSection <span class="ck">from</span> <span class="cs">’./HeroSection.astro’</span>  <span class="cm">// Zero JS — static HTML</span>
+<span class="ck">import</span> SearchBar <span class="ck">from</span> <span class="cs">’./SearchBar.jsx’</span>       <span class="cm">// Island — needs JS</span>
+<span class="ck">import</span> ProductGrid <span class="ck">from</span> <span class="cs">’./ProductGrid.jsx’</span>   <span class="cm">// Island — needs JS</span>
+<span class="ck">import</span> Comments <span class="ck">from</span> <span class="cs">’./Comments.jsx’</span>        <span class="cm">// Island — needs JS</span>
+<span class="ck">import</span> Footer <span class="ck">from</span> <span class="cs">’./Footer.astro’</span>         <span class="cm">// Zero JS — static HTML</span>
+<span class="cm">—</span>
+
+<span class="cm"><!– Static HTML, no JS –></span>
+<span class="ct"><Header /></span>
+<span class="ct"><HeroSection /></span>
+
+<span class="cm"><!– Island: hydrate immediately (above fold, needs instant interactivity) –></span>
+<span class="ct"><SearchBar</span> <span class="ck">client:load</span> <span class="ct">/></span>
+
+<span class="cm"><!– Island: hydrate when scrolled into view (below fold) –></span>
+<span class="ct"><ProductGrid</span> <span class="ck">client:visible</span> <span class="ct">/></span>
+
+<span class="cm"><!– Island: hydrate when browser is idle (not critical path) –></span>
+<span class="ct"><Comments</span> <span class="ck">client:idle</span> <span class="ct">/></span>
+
+<span class="cm"><!– Static HTML, no JS –></span>
+<span class="ct"><Footer /></span></div>
+
+
+<div class="dense-block">
+  <p><strong>Why zero-JS by default matters</strong><br>
+  Traditional React/Vue/Angular apps hydrate the entire component tree — even components that never change (a static nav bar, a footer, article text). Astro inverts this: the default is no JavaScript. You opt-in specific components to receive JS. A typical content site built with Astro ships 0KB of JS for the reader until they interact with an Island. This directly impacts LCP (Largest Contentful Paint), TTI (Time to Interactive), and Core Web Vitals scores.</p>
+  <p><strong>client:visible — the most impactful directive</strong><br>
+  <code>client:visible</code> uses <code>IntersectionObserver</code> to wait until the component enters the viewport before fetching and executing its JavaScript. For a page with a carousel at the bottom, this means the carousel's JS bundle is never loaded for users who don't scroll that far. In high-traffic scenarios, this can reduce JavaScript transfer by 40-70% compared to eager loading everything.</p>
+  <p><strong>Framework agnostic — React, Vue, Svelte in the same page</strong><br>
+  Each Astro Island can use a different framework. <code>client:only="react"</code>, <code>client:only="vue"</code>, and <code>client:load</code> on a Svelte component can all exist on the same page. Each Island loads only its own framework runtime — so a page with one React Island ships ~40KB of React runtime, not the full React app bundle. A pure-HTML page ships nothing.</p>
+</div>
+
+
+  </section>
+
+  <!-- FAQ -->
+
+  <section class="content-section">
+    <div class="sec-head">
+      <span class="sec-label">FAQ — Astro partial hydration</span>
+      <span class="sec-rule"></span>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What is Astro partial hydration?<span class="faq-arrow">&#9660;</span></button>
+        <div class="faq-a">Astro partial hydration sends JavaScript only to specific interactive components called Islands. The rest of the page is static HTML — zero JavaScript. A standard blog post page in Astro might have a React search bar (Island) and a Vue comment section (Island), while the article content, header, and footer ship as plain HTML. This drastically reduces JS bundle size and improves performance compared to SPAs that hydrate everything.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">What is the difference between client:load and client:visible?<span class="faq-arrow">&#9660;</span></button>
+        <div class="faq-a"><code>client:load</code> — JavaScript is fetched and the component hydrates immediately when the page loads. Use for components visible above the fold that need instant interactivity (search bars, interactive navigation). <code>client:visible</code> — hydration is deferred until the component scrolls into the viewport using IntersectionObserver. Use for below-fold components. A user who never scrolls down never loads that component's JS at all. This is the most impactful directive for performance optimization.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">When should I use client:only?<span class="faq-arrow">&#9660;</span></button>
+        <div class="faq-a"><code>client:only</code> skips server-side rendering entirely — the component has no HTML output until it hydrates in the browser. Use it when: (1) The component depends on browser APIs unavailable during SSR (window, document, localStorage). (2) A third-party widget doesn't support SSR. (3) You're using a framework where SSR is problematic. You must specify the framework: <code>client:only="react"</code>. The downside: no HTML is present before JS loads, which can hurt LCP and cause layout shift.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">How is Astro partial hydration different from React Server Components?<span class="faq-arrow">&#9660;</span></button>
+        <div class="faq-a">Both reduce client JavaScript, but differently. <strong>Astro Islands</strong> are framework-agnostic — you can mix React, Vue, Svelte in one page. Non-Island Astro components are pure HTML with zero runtime. <strong>React Server Components</strong> stay within the React ecosystem and allow fine-grained server/client separation within a component tree. Astro is a better choice when you want framework flexibility or are building primarily content-driven sites. RSC is better when you're committed to React and want deep integration with React's rendering model.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+
+  <section class="content-section">
+    <div class="sec-head">
+      <span class="sec-label">Astro tools</span>
+      <span class="sec-rule"></span>
+    </div>
+    <div class="subtools-grid">
+      <a href="hydration/" class="stl"><p class="stl-eye">hydration //</p><span class="stl-name">Hydration Debugger</span></a>
+      <a href="islands/" class="stl"><p class="stl-eye">islands //</p><span class="stl-name">Islands Visualizer</span></a>
+      <a href="partial/" class="stl"><p class="stl-eye">partial //</p><span class="stl-name">Partial Hydration Explorer</span></a>
+      <a href="performance/" class="stl"><p class="stl-eye">perf //</p><span class="stl-name">Performance Analyzer</span></a>
+      <a href="rendering/" class="stl"><p class="stl-eye">render //</p><span class="stl-name">Rendering Mode Comparator</span></a>
+      <a href="build/" class="stl"><p class="stl-eye">build //</p><span class="stl-name">Build Analyzer</span></a>
+    </div>
+  </section>
+
+  <div class="tag-cloud">
+    <span class="tag">astro partial hydration</span>
+    <span class="tag">astro islands architecture</span>
+    <span class="tag">astro client directives</span>
+    <span class="tag">client:load client:visible</span>
+    <span class="tag">astro zero js</span>
+    <span class="tag">astro hydration explained</span>
+    <span class="tag">astro islands guide</span>
+    <span class="tag">astro client:idle</span>
+    <span class="tag">astro client:only</span>
+    <span class="tag">astro performance 2025</span>
+  </div>
 
 </div>
 
 <footer>
-    © 2026 Astro Tools — Optimize modern frontend performance.
+  <div class="footer-inner">
+    <p>astro-partial-hydration &middot; islands architecture &middot; client directives</p>
+    <p>free reference &middot; github pages</p>
+  </div>
 </footer>
+
+<script>
+var DIRECTIVES = [
+  {
+    id: 'load',
+    label: 'client:load',
+    when: 'Immediate',
+    whenColor: '#f87171',
+    trigger: 'On page load — highest priority',
+    jsCost: 'High (immediate fetch)',
+    htmlOutput: 'Yes (SSR HTML)',
+    useFor: 'Above-fold interactive components',
+    code: [
+      { type: 'cm',  text: '---' },
+      { type: 'cm',  text: '// SearchBar.jsx — React component' },
+      { type: 'cm',  text: '---' },
+      { type: 'blank' },
+      { type: 'cm',  text: '<!-- Hydrates immediately when page loads -->' },
+      { type: 'cm',  text: '<!-- JS bundle fetched right away -->' },
+      { type: 'tag', text: '<SearchBar' },
+      { type: 'dir', text: ' client:load' },
+      { type: 'tag', text: ' placeholder=' },
+      { type: 'str', text: '"Search..."' },
+      { type: 'tag', text: ' />' }
+    ],
+    timeline: [
+      { label: 'HTML',   start: 0,   end: 10,  color: '#bc52f0' },
+      { label: 'JS',     start: 5,   end: 35,  color: '#f87171' },
+      { label: 'Hydrate',start: 35,  end: 45,  color: '#22c55e' }
+    ]
+  },
+  {
+    id: 'idle',
+    label: 'client:idle',
+    when: 'On idle',
+    whenColor: '#fbbf24',
+    trigger: 'requestIdleCallback (or setTimeout fallback)',
+    jsCost: 'Low (deferred)',
+    htmlOutput: 'Yes (SSR HTML)',
+    useFor: 'Secondary UI, non-critical widgets',
+    code: [
+      { type: 'cm',  text: '---' },
+      { type: 'cm',  text: '// Tooltip.jsx — shown on hover' },
+      { type: 'cm',  text: '---' },
+      { type: 'blank' },
+      { type: 'cm',  text: '<!-- Waits until browser main thread is free -->' },
+      { type: 'cm',  text: '<!-- Good for secondary interactions -->' },
+      { type: 'tag', text: '<HelpTooltip' },
+      { type: 'dir', text: ' client:idle' },
+      { type: 'tag', text: ' />' }
+    ],
+    timeline: [
+      { label: 'HTML',   start: 0,   end: 10,  color: '#bc52f0' },
+      { label: 'Page',   start: 10,  end: 40,  color: '#3a5570' },
+      { label: 'Idle',   start: 40,  end: 50,  color: '#fbbf24' },
+      { label: 'Hydrate',start: 50,  end: 60,  color: '#22c55e' }
+    ]
+  },
+  {
+    id: 'visible',
+    label: 'client:visible',
+    when: 'On scroll',
+    whenColor: '#22c55e',
+    trigger: 'IntersectionObserver — when in viewport',
+    jsCost: 'Zero until scrolled to',
+    htmlOutput: 'Yes (SSR HTML)',
+    useFor: 'Below-fold components',
+    code: [
+      { type: 'cm',  text: '---' },
+      { type: 'cm',  text: '// Carousel.jsx — product carousel' },
+      { type: 'cm',  text: '---' },
+      { type: 'blank' },
+      { type: 'cm',  text: '<!-- JS is NEVER loaded if user never scrolls here -->' },
+      { type: 'cm',  text: '<!-- Uses IntersectionObserver internally -->' },
+      { type: 'tag', text: '<ProductCarousel' },
+      { type: 'dir', text: ' client:visible' },
+      { type: 'tag', text: ' />' }
+    ],
+    timeline: [
+      { label: 'HTML',   start: 0,   end: 10,  color: '#bc52f0' },
+      { label: 'Scroll', start: 10,  end: 65,  color: '#3a5570' },
+      { label: 'JS',     start: 65,  end: 80,  color: '#22c55e' },
+      { label: 'Hydrate',start: 80,  end: 88,  color: '#22c55e' }
+    ]
+  },
+  {
+    id: 'media',
+    label: 'client:media',
+    when: 'On breakpoint',
+    whenColor: '#38bdf8',
+    trigger: 'window.matchMedia() — CSS media query',
+    jsCost: 'Zero on non-matching screens',
+    htmlOutput: 'Yes (SSR HTML)',
+    useFor: 'Mobile-only or desktop-only interactive UI',
+    code: [
+      { type: 'cm',  text: '---' },
+      { type: 'cm',  text: '// MobileMenu.jsx — hamburger nav' },
+      { type: 'cm',  text: '---' },
+      { type: 'blank' },
+      { type: 'cm',  text: '<!-- Only hydrates on screens narrower than 768px -->' },
+      { type: 'cm',  text: '<!-- Desktop users never load this JS -->' },
+      { type: 'tag', text: '<MobileMenu' },
+      { type: 'dir', text: ' client:media=' },
+      { type: 'str', text: '"(max-width: 768px)"' },
+      { type: 'tag', text: ' />' }
+    ],
+    timeline: [
+      { label: 'HTML',   start: 0,   end: 10,  color: '#bc52f0' },
+      { label: 'Check',  start: 10,  end: 20,  color: '#38bdf8' },
+      { label: 'JS',     start: 20,  end: 50,  color: '#38bdf8' },
+      { label: 'Hydrate',start: 50,  end: 60,  color: '#22c55e' }
+    ]
+  },
+  {
+    id: 'only',
+    label: 'client:only',
+    when: 'CSR only',
+    whenColor: '#bc52f0',
+    trigger: 'Client-side only — no SSR. Must specify: client:only="react"',
+    jsCost: 'Full (no SSR HTML)',
+    htmlOutput: 'No — blank until hydrated',
+    useFor: 'window-dependent, non-SSR components',
+    code: [
+      { type: 'cm',  text: '---' },
+      { type: 'cm',  text: '// AnalyticsChart.jsx — uses window/canvas' },
+      { type: 'cm',  text: '---' },
+      { type: 'blank' },
+      { type: 'cm',  text: '<!-- No HTML output from server -->' },
+      { type: 'cm',  text: '<!-- Renders only in browser (CSR) -->' },
+      { type: 'tag', text: '<AnalyticsChart' },
+      { type: 'dir', text: ' client:only=' },
+      { type: 'str', text: '"react"' },
+      { type: 'tag', text: ' />' }
+    ],
+    timeline: [
+      { label: 'HTML',   start: 0,   end: 5,   color: '#3a5570' },
+      { label: 'JS',     start: 5,   end: 40,  color: '#bc52f0' },
+      { label: 'Render', start: 40,  end: 55,  color: '#bc52f0' }
+    ]
+  }
+];
+
+var activeDir = 'load';
+
+function el(tag, cls, text) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function renderDirectiveTabs() {
+  var tabs = document.getElementById('dirTabs');
+  DIRECTIVES.forEach(function(d) {
+    var btn = el('button', 'dir-btn' + (d.id === activeDir ? ' active' : ''), d.label);
+    btn.onclick = function() {
+      activeDir = d.id;
+      document.querySelectorAll('.dir-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      renderDirectiveContent(d);
+    };
+    tabs.appendChild(btn);
+  });
+}
+
+function buildCodeHtml(lines) {
+  var html = '';
+  lines.forEach(function(line) {
+    if (line.type === 'blank') { html += '\n'; return; }
+    var cls = '';
+    if (line.type === 'cm')  cls = 'vc-cm';
+    if (line.type === 'dir') cls = 'vc-dir';
+    if (line.type === 'tag') cls = 'vc-tag';
+    if (line.type === 'attr')cls = 'vc-attr';
+    if (line.type === 'str') cls = 'vc-str';
+    html += '<span class="' + cls + '">' + line.text + '</span>';
+  });
+  return html;
+}
+
+function renderDirectiveContent(d) {
+  // Code
+  var codeEl = document.getElementById('visCode');
+  codeEl.innerHTML = buildCodeHtml(d.code);
+
+  // Meta
+  var meta = document.getElementById('visMeta');
+  meta.innerHTML = '';
+  var rows = [
+    { k: 'Trigger:', v: d.trigger },
+    { k: 'When:', v: d.when },
+    { k: 'JS cost:', v: d.jsCost },
+    { k: 'SSR HTML:', v: d.htmlOutput },
+    { k: 'Use for:', v: d.useFor }
+  ];
+  rows.forEach(function(r) {
+    var row = el('div', 'meta-row');
+    var k = el('span', 'meta-key', r.k);
+    var v = el('span', 'meta-val', r.v);
+    v.style.color = d.whenColor;
+    row.appendChild(k); row.appendChild(v);
+    meta.appendChild(row);
+  });
+
+  // Timeline
+  var tl = document.getElementById('visTL');
+  tl.innerHTML = '';
+  var head = el('div', 'tl-head', 'Load timeline (approximate)');
+  tl.appendChild(head);
+  d.timeline.forEach(function(step) {
+    var row = el('div', 'tl-bar');
+    var lbl = el('span', 'tl-label', step.label);
+    var track = el('div', 'tl-track');
+    var fill = el('div', 'tl-fill');
+    fill.style.left = step.start + '%';
+    fill.style.width = (step.end - step.start) + '%';
+    fill.style.background = step.color;
+    track.appendChild(fill);
+    var val = el('span', 'tl-val', step.start + '% → ' + step.end + '%');
+    val.style.color = step.color;
+    row.appendChild(lbl); row.appendChild(track); row.appendChild(val);
+    tl.appendChild(row);
+  });
+}
+
+function toggleFaq(btn) {
+  btn.parentElement.classList.toggle('open');
+}
+
+renderDirectiveTabs();
+var firstDir = DIRECTIVES.find(function(d) { return d.id === activeDir; });
+if (firstDir) renderDirectiveContent(firstDir);
+</script>
 
 </body>
 </html>
